@@ -2,6 +2,12 @@ using System.Collections.Generic;
 
 namespace Licenator
 {
+    public class PackageInfo
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
+        public string UsedIn { get; set; }
+    }
     public class NuGetMetadata
     {
         public string Id { get; set; }
