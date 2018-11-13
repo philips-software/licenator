@@ -1,15 +1,15 @@
 namespace Licenator
 {
-    public class CsProjParser : BaseParser
+    public class CsProjParser : LineBasedParser
     {
         public override bool SupportsFile(string filepath)
         {
             return filepath.ToLowerInvariant().EndsWith("csproj");
         }
 
-        public override PackageInfo[] Parse(string filepath)
+        protected override PackageInfo ParseLine(string line)
         {
-            throw new System.NotImplementedException();
+            return null;
         }
     }
 }

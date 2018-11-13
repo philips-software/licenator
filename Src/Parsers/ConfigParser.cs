@@ -1,15 +1,15 @@
 namespace Licenator
 {
-    public class ConfigParser : BaseParser
+    public class ConfigParser : LineBasedParser
     {
         public override bool SupportsFile(string filepath)
         {
             return filepath.ToLowerInvariant().EndsWith("config");
         }
 
-        public override PackageInfo[] Parse(string filepath)
+        protected override PackageInfo ParseLine(string line)
         {
-            throw new System.NotImplementedException();
+            return null;
         }
     }
 }
