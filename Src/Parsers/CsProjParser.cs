@@ -7,7 +7,7 @@ namespace Licenator
             return filepath.ToLowerInvariant().EndsWith("csproj");
         }
 
-        protected override PackageInfo ParseLine(string line)
+        protected override PackageInfo ParseLine(string filepath, string line)
         {
             return null;
         }

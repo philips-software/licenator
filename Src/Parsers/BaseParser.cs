@@ -14,7 +14,7 @@ namespace Licenator
     {
         public abstract bool SupportsFile(string filepath);
 
-        protected abstract PackageInfo ParseLine(string line);
+        protected abstract PackageInfo ParseLine(string filepath, string line);
 
         public PackageInfo[] Parse(string filepath)
         {
@@ -23,7 +23,7 @@ namespace Licenator
 
             foreach (var line in lines)
             {
-                var r = ParseLine(RemoveWhitespaces(line));
+                var r = ParseLine(filepath, RemoveWhitespaces(line));
 
                 if (r != null)
                 {
