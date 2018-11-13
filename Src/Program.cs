@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -10,18 +11,45 @@ namespace Licenator
     {
         public static void Main(string[] args)
         {
-            var traveler = new DirectoryTraveler();
-
-            traveler.Begin(@"C:\Data\MaskDesign\Source\VisualStudioSolution", file =>
+            if (args.Length != 2)
             {
-                Console.WriteLine("found file: " + file);
-            });
+                Console.WriteLine("Usage: Licenator \"<Root Directory>\" \"<Output filename>\"");
+                return;
+            }
+
+            var rootPath = args[0];
+            var outputFile = args[1];
+
+            var traveler = new DirectoryTraveler();
+            var parser = new NuGetParser();
+
+            var packages = new List<PackageInfo>();
+
+            traveler.Begin(rootPath, file => HandleFile(file, parser, packages));
+
+            foreach(var p in packages)
+            {
+                Console.WriteLine(p.UsedIn + "-" + p.Name + "-" + p.Version);
+            }
+            Console.WriteLine("output file: " + outputFile);
 
             //var projectName = "nuget.server.core";
             //var projectName = "castle.core";
-            var projectName = "Newtonsoft.Json";
+            // var projectName = "Newtonsoft.Json";
 
-            var licenses = GetUniqueLicenseUrlForProject(projectName);
+            // var licenses = GetUniqueLicenseUrlForProject(projectName);
+        }
+
+        private static void HandleFile(string file, NuGetParser parser, List<PackageInfo> packages)
+        {
+            if (parser.SupportsFile(file))
+            {
+                var result = parser.ProcessFile(file);
+                if (result.Any())
+                {
+                    packages.AddRange(result);
+                }
+            }
         }
 
         private static string[] GetUniqueLicenseUrlForProject(string projectName)
