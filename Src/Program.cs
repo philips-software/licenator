@@ -10,6 +10,13 @@ namespace Licenator
     {
         public static void Main(string[] args)
         {
+            var traveler = new DirectoryTraveler();
+
+            traveler.Begin(@"C:\Data\MaskDesign\Source\VisualStudioSolution", file =>
+            {
+                Console.WriteLine("found file: " + file);
+            });
+
             //var projectName = "nuget.server.core";
             //var projectName = "castle.core";
             var projectName = "Newtonsoft.Json";
