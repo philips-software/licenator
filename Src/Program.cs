@@ -20,68 +20,42 @@ namespace Licenator
             var rootPath = args[0];
             var outputFile = args[1];
 
+            Console.WriteLine("Licenator (c) Philips 2018 by Ben Bierens");
+            Console.WriteLine("Directory: " + rootPath);
+            Console.WriteLine("Output: " + outputFile);
+
             var traveler = new DirectoryTraveler();
             var parser = new NuGetParser();
+            var packages = new PackageList();
+            var licenseResolver = new LicenseResolver();
 
-            var packages = new List<PackageInfo>();
-
+            Console.WriteLine("Reading packages...");
             traveler.Begin(rootPath, file => HandleFile(file, parser, packages));
 
-            foreach(var p in packages)
+            Console.WriteLine("Fetching package information...");
+            licenseResolver.ResolveAll(packages);
+
+            var summary = packages.GetSummary();
+
+            foreach(var p in summary)
             {
-                Console.WriteLine(p.UsedIn + "-" + p.Name + "-" + p.Version);
+                Console.WriteLine("License: " + p.LicenseUrl);
+                Console.WriteLine("Packages with this license: " + string.Join(Environment.NewLine, p.Packages.Select(s => s.Name + " (" + s.Version + ")")));
+                Console.WriteLine("Used in: " + string.Join(',', p.UsedIn));
+                Console.WriteLine(" ");
             }
             Console.WriteLine("output file: " + outputFile);
-
-            //var projectName = "nuget.server.core";
-            //var projectName = "castle.core";
-            // var projectName = "Newtonsoft.Json";
-
-            // var licenses = GetUniqueLicenseUrlForProject(projectName);
         }
 
-        private static void HandleFile(string file, NuGetParser parser, List<PackageInfo> packages)
+        private static void HandleFile(string file, NuGetParser parser, PackageList packages)
         {
             if (parser.SupportsFile(file))
             {
                 var result = parser.ProcessFile(file);
                 if (result.Any())
                 {
-                    packages.AddRange(result);
+                    packages.Add(result);
                 }
-            }
-        }
-
-        private static string[] GetUniqueLicenseUrlForProject(string projectName)
-        {
-            using (var httpClient = new HttpClient())
-            {
-                var uri = new Uri("https://api.nuget.org/v3/registration3/" + projectName.ToLowerInvariant() + "/index.json");
-                var task = httpClient.GetAsync(uri);
-                task.Wait();
-
-                var result = task.Result;
-                if (result.StatusCode != HttpStatusCode.OK) throw new Exception("StatusCode: " + result.StatusCode);
-                var str = result.Content.ReadAsStringAsync().Result;
-
-                var data = JsonConvert.DeserializeObject<NuGetMetadata>(str);
-
-                foreach (var item in data.Items)
-                {
-                    foreach (var e in item.Items)
-                    {
-                        var entry = e.CatalogEntry;
-                        Console.WriteLine(entry.Id + " - " + entry.Title + " - " + entry.Version + " - " + entry.LicenseUrl);
-                    }
-                }
-
-                var licenseUrls = data.Items
-                    .SelectMany(i => i.Items.Select(ii => ii.CatalogEntry.LicenseUrl))
-                    .Distinct()
-                    .Where(s => !string.IsNullOrEmpty(s))
-                    .ToArray();
-
-                return licenseUrls;
             }
         }
     }

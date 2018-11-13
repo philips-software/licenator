@@ -7,7 +7,23 @@ namespace Licenator
         public string Name { get; set; }
         public string Version { get; set; }
         public string UsedIn { get; set; }
+
+        public string LicenseUrl { get; set; }
     }
+
+    public class LicenseSummary
+    {
+        public string LicenseUrl { get; set; }
+        public List<PackageSummary> Packages { get; set; }
+        public List<string> UsedIn { get; set; }
+    }
+
+    public class PackageSummary
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
+    }
+
     public class NuGetMetadata
     {
         public string Id { get; set; }
