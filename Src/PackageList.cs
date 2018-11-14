@@ -66,7 +66,7 @@ namespace Licenator
 
         public IEnumerable<PackageInfo> GetFailedPackages()
         {
-            return _infos.Where(i => string.IsNullOrEmpty(i.LicenseUrl));
+            return _infos.Where(i => string.IsNullOrEmpty(i.LicenseUrl)).OrderBy(i => i.Name + i.Version);
         }
     }
 }
