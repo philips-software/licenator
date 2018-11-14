@@ -14,7 +14,7 @@ namespace Licenator
         private const string IndentWhitespaces = "    ";
         private static string RootPath;
         private static string OutputFile;
-        private static List<string> PackagesToIgnore;
+        private static List<string> PackagesToIgnore = new List<string>();
         private static NuGetParser Parser = new NuGetParser();
 
         public static void Main(string[] args)
