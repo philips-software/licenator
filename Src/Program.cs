@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -9,39 +10,26 @@ namespace Licenator
 {
     public class Program
     {
+        private const string LicenatorHeaderLine = "Licenator (c) Philips 2018 by Ben Bierens";
+        private const string IndentWhitespaces = "    ";
         private static string RootPath;
         private static string OutputFile;
         private static List<string> PackagesToIgnore;
+        private static NuGetParser Parser = new NuGetParser();
 
         public static void Main(string[] args)
         {
-            Console.WriteLine("Licenator (c) Philips 2018 by Ben Bierens");
+            Console.WriteLine(LicenatorHeaderLine);
 
             HandleAndEchoArguments(args);
 
-            var traveler = new DirectoryTraveler();
-            var parser = new NuGetParser();
             var packages = new PackageList();
-            var licenseResolver = new LicenseResolver();
 
-            Console.WriteLine("Reading packages...");
-            traveler.Begin(RootPath, file => HandleFile(file, parser, packages));
+            ProcessPackages(packages);
 
-            packages.IgnorePackages(PackagesToIgnore);
+            GenerateOutputFile(packages);
 
-            Console.WriteLine("Fetching package information...");
-            licenseResolver.ResolveAll(packages);
-
-            var summary = packages.GetSummary();
-
-            foreach(var p in summary)
-            {
-                Console.WriteLine("License: " + p.LicenseUrl);
-                Console.WriteLine("Packages with this license: " + string.Join(Environment.NewLine, p.Packages.Select(s => s.Name + " (" + s.Version + ")")));
-                Console.WriteLine("Used in: " + string.Join(',', p.UsedIn));
-                Console.WriteLine(" ");
-            }
-            Console.WriteLine("output file: " + OutputFile);
+            Console.WriteLine("Done!");
         }
 
         private static void HandleAndEchoArguments(string[] args)
@@ -75,16 +63,57 @@ namespace Licenator
             Environment.Exit(0);
         }
 
-        private static void HandleFile(string file, NuGetParser parser, PackageList packages)
+        private static void ProcessPackages(PackageList packages)
         {
-            if (parser.SupportsFile(file))
+            var traveler = new DirectoryTraveler();
+            Console.WriteLine("Reading packages...");
+            traveler.Begin(RootPath, file => HandleFile(file, packages));
+
+            packages.IgnorePackages(PackagesToIgnore);
+
+            var licenseResolver = new LicenseResolver();
+            Console.WriteLine("Fetching package information...");
+            licenseResolver.ResolveAll(packages);
+        }
+
+        private static void HandleFile(string file, PackageList packages)
+        {
+            if (Parser.SupportsFile(file))
             {
-                var result = parser.ProcessFile(file);
+                var result = Parser.ProcessFile(file);
                 if (result.Any())
                 {
                     packages.Add(result);
                 }
             }
+        }
+
+        private static void GenerateOutputFile(PackageList packages)
+        {
+            var lines = new List<string>();
+            lines.Add(LicenatorHeaderLine);
+            lines.Add("Directory: " + RootPath);
+            lines.Add("Generated on: " + DateTime.Now.ToString("s"));
+            lines.Add("");
+            
+            var summary = packages.GetSummary();
+            foreach(var p in summary)
+            {
+                lines.Add("License: " + p.LicenseUrl);
+                lines.Add("Packages with this license:");
+                foreach (var ps in p.Packages)
+                {
+                    lines.Add(IndentWhitespaces + ps.Name + " (" + ps.Version + ")");
+                }
+                lines.Add("Used in:");
+                foreach(var u in p.UsedIn)
+                {
+                    lines.Add(IndentWhitespaces + u);
+                }
+                lines.Add("");
+            }
+
+            File.WriteAllLines(OutputFile, lines);
         }
     }
 }
