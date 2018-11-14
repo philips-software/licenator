@@ -63,5 +63,10 @@ namespace Licenator
 
             return result;
         }
+
+        public IEnumerable<PackageInfo> GetFailedPackages()
+        {
+            return _infos.Where(i => string.IsNullOrEmpty(i.LicenseUrl));
+        }
     }
 }

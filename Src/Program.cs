@@ -113,6 +113,17 @@ namespace Licenator
                 lines.Add("");
             }
 
+            var failedPackages = packages.GetFailedPackages();
+            if (failedPackages.Any())
+            {
+                lines.Add("[!] Fetching package metadata failed for the following packages. [!]");
+                foreach (var p in failedPackages)
+                {
+                    lines.Add(IndentWhitespaces + p.Name +  " (" + p.Version + ") Used in: " + p.UsedIn);
+                }
+                lines.Add("");
+            }
+
             File.WriteAllLines(OutputFile, lines);
         }
     }

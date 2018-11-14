@@ -27,9 +27,11 @@ namespace Licenator
             }
             catch (Exception exception)
             {
-                Console.WriteLine("Failed to fetch package metadata for '" + 
+                Console.WriteLine("[!] Failed to fetch package metadata for '" + 
                     package.Name + "' with version '" + package.Version + "'. (Used in: " +  package.UsedIn + ")");
                 Console.WriteLine("Exception details: " + exception);
+
+                package.LicenseUrl = null;
             }
         }
 
@@ -47,9 +49,9 @@ namespace Licenator
 
                 var data = JsonConvert.DeserializeObject<NuGetMetadata>(str);
 
-                var entries = data.Items.SelectMany(i => i.Items).Select(ii => ii.CatalogEntry);
+                var entries = data.Items.SelectMany(i => i.Items).Select(ii => ii.CatalogEntry).ToArray();
 
-                var entriesOfCorrectVersion = entries.Where(i => i.Version.ToLowerInvariant() == version.ToLowerInvariant());
+                var entriesOfCorrectVersion = entries.Where(i => i.Version.ToLowerInvariant() == version.ToLowerInvariant()).ToArray();
 
                 if (!entriesOfCorrectVersion.Any())
                 {
