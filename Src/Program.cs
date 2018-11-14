@@ -9,20 +9,15 @@ namespace Licenator
 {
     public class Program
     {
+        private static string RootPath;
+        private static string OutputFile;
+        private static List<string> PackagesToIgnore;
+
         public static void Main(string[] args)
         {
-            if (args.Length != 2)
-            {
-                Console.WriteLine("Usage: Licenator \"<Root Directory>\" \"<Output filename>\"");
-                return;
-            }
-
-            var rootPath = args[0];
-            var outputFile = args[1];
-
             Console.WriteLine("Licenator (c) Philips 2018 by Ben Bierens");
-            Console.WriteLine("Directory: " + rootPath);
-            Console.WriteLine("Output: " + outputFile);
+
+            HandleAndEchoArguments(args);
 
             var traveler = new DirectoryTraveler();
             var parser = new NuGetParser();
@@ -30,7 +25,9 @@ namespace Licenator
             var licenseResolver = new LicenseResolver();
 
             Console.WriteLine("Reading packages...");
-            traveler.Begin(rootPath, file => HandleFile(file, parser, packages));
+            traveler.Begin(RootPath, file => HandleFile(file, parser, packages));
+
+            packages.IgnorePackages(PackagesToIgnore);
 
             Console.WriteLine("Fetching package information...");
             licenseResolver.ResolveAll(packages);
@@ -44,7 +41,38 @@ namespace Licenator
                 Console.WriteLine("Used in: " + string.Join(',', p.UsedIn));
                 Console.WriteLine(" ");
             }
-            Console.WriteLine("output file: " + outputFile);
+            Console.WriteLine("output file: " + OutputFile);
+        }
+
+        private static void HandleAndEchoArguments(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                PrintUsageAndExit();
+                return;
+            }
+
+            RootPath = args[0];
+            OutputFile = args[1];
+            if (args.Length > 2 && args[2] == "-i")
+            {
+                PackagesToIgnore = args.Skip(3).ToList();
+            }
+            
+            Console.WriteLine("Directory: " + RootPath);
+            Console.WriteLine("Output: " + OutputFile);
+            if (PackagesToIgnore.Any())
+            {
+                Console.WriteLine("Ignoring packages: " + string.Join(',', PackagesToIgnore));
+            }
+        }
+
+        private static void PrintUsageAndExit()
+        {
+            Console.WriteLine("Usage: Licenator \"<Root Directory>\" \"<Output filename>\"");
+            Console.WriteLine("You can ignore any number of specific packages with -i:");
+            Console.WriteLine("Usage: Licenator \"<Root Directory>\" \"<Output filename>\" -i \"Package.To.Ignore.One\" \"Package.To.Ignore.Two\"");
+            Environment.Exit(0);
         }
 
         private static void HandleFile(string file, NuGetParser parser, PackageList packages)

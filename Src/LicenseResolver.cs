@@ -47,15 +47,6 @@ namespace Licenator
 
                 var data = JsonConvert.DeserializeObject<NuGetMetadata>(str);
 
-                // foreach (var item in data.Items)
-                // {
-                //     foreach (var e in item.Items)
-                //     {
-                //         var entry = e.CatalogEntry;
-                //         Console.WriteLine(entry.Id + " - " + entry.Title + " - " + entry.Version + " - " + entry.LicenseUrl);
-                //     }
-                // }
-
                 var entries = data.Items.SelectMany(i => i.Items).Select(ii => ii.CatalogEntry);
 
                 var entriesOfCorrectVersion = entries.Where(i => i.Version.ToLowerInvariant() == version.ToLowerInvariant());

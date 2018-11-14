@@ -12,6 +12,11 @@ namespace Licenator
             _infos.AddRange(infos);
         }
 
+        public void IgnorePackages(List<string> packagesToIgnore)
+        {
+            _infos.RemoveAll(i => packagesToIgnore.Contains(i.Name));
+        }
+
         public IEnumerable<PackageInfo> GetInfos()
         {
             return _infos;
