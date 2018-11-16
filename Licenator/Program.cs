@@ -10,7 +10,7 @@ namespace Licenator
 {
     public class Program
     {
-        private const string LicenatorHeaderLine = "Licenator (c) Philips 2018 by Ben Bierens";
+        private const string LicenatorHeaderLine = "Licenator v0.0.1 (c) Philips 2018 by Ben Bierens";
         private const string IndentWhitespaces = "    ";
         private static string RootPath;
         private static string OutputFile;
