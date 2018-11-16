@@ -9,7 +9,20 @@ namespace Licenator
 
         public void Add(IEnumerable<PackageInfo> infos)
         {
-            _infos.AddRange(infos);
+            // Add new packages if they don't exist.
+            // If they do, add the UsedIn information if it doesn't exist.
+            foreach (var i in infos)
+            {
+                var existing = GetPackageIfExists(i.Name, i.Version);
+                if (existing != null)
+                {
+                    existing.UsedIn = existing.UsedIn.CombineUnique(i.UsedIn).ToList();
+                }
+                else
+                {
+                    _infos.Add(i);
+                }
+            }
         }
 
         public void IgnorePackages(List<string> packagesToIgnore)
@@ -33,33 +46,10 @@ namespace Licenator
             {
                 if (string.IsNullOrEmpty(i.LicenseUrl)) continue;
 
-                var existingSummary = result.SingleOrDefault(r => r.LicenseUrl == i.LicenseUrl);
-                if (existingSummary == null)
-                {
-                    result.Add(new LicenseSummary
-                    {
-                        LicenseUrl = i.LicenseUrl,
-                        Packages = new List<PackageSummary>
-                        {
-                            new PackageSummary
-                            {
-                                Name = i.Name,
-                                Version = i.Version
-                            }
-                        },
-                        UsedIn = new List<string>{i.UsedIn}
-                    });
-                }
-                else
-                {
-                    if (!existingSummary.Packages.Any(p => p.Name == i.Name)) existingSummary.Packages.Add(new PackageSummary
-                    {
-                        Name = i.Name,
-                        Version = i.Version
-                    });
-                    if (!existingSummary.UsedIn.Contains(i.UsedIn)) existingSummary.UsedIn.Add(i.UsedIn);
-                }
+                AddOrUpdateSummary(result, i);
             }
+
+            result = result.OrderBy(r => r.LicenseUrl).ToList();
 
             return result;
         }
@@ -67,6 +57,55 @@ namespace Licenator
         public IEnumerable<PackageInfo> GetFailedPackages()
         {
             return _infos.Where(i => string.IsNullOrEmpty(i.LicenseUrl)).OrderBy(i => i.Name + i.Version);
+        }
+
+        private void AddOrUpdateSummary(List<LicenseSummary> result, PackageInfo i)
+        {
+            var existingSummary = result.SingleOrDefault(r => r.LicenseUrl == i.LicenseUrl);
+            if (existingSummary == null)
+            {
+                AddNewSummaryEntry(result, i);
+            }
+            else
+            {
+                UpdateExistingSummaryEntry(existingSummary, i);
+            }
+        }
+
+        private void AddNewSummaryEntry(List<LicenseSummary> result, PackageInfo i)
+        {
+            result.Add(new LicenseSummary
+            {
+                LicenseUrl = i.LicenseUrl,
+                Packages = new List<PackageSummary>
+                {
+                    new PackageSummary
+                    {
+                        Name = i.Name,
+                        Version = i.Version
+                    }
+                },
+                UsedIn = i.UsedIn
+            });
+        }
+
+        private void UpdateExistingSummaryEntry(LicenseSummary summary, PackageInfo i)
+        {
+            if (!summary.Packages.Any(p => p.Name == i.Name))
+            {
+                summary.Packages.Add(new PackageSummary
+                {
+                    Name = i.Name,
+                    Version = i.Version
+                });
+            }
+            
+            summary.UsedIn = summary.UsedIn.CombineUnique(i.UsedIn).ToList();
+        }
+
+        private PackageInfo GetPackageIfExists(string name, string version)
+        {
+            return _infos.SingleOrDefault(i => i.Name == name && i.Version == version);
         }
     }
 }

@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -35,7 +36,7 @@ namespace Licenator
             }
         }
 
-        private string GetLicenseUrlForProject(string projectName, string version, string usedIn)
+        private string GetLicenseUrlForProject(string projectName, string version, List<string> usedIn)
         {
             using (var httpClient = new HttpClient())
             {
@@ -55,14 +56,16 @@ namespace Licenator
 
                 if (!entriesOfCorrectVersion.Any())
                 {
-                    throw new Exception("Unable to find NuGet catalog entry for '" + projectName + "' with version '" + version + "'. (Used in: " + usedIn + ")");
+                    throw new Exception("Unable to find NuGet catalog entry for '" + projectName + "' with version '" + version
+                    + "'. (Used in: " + string.Join(',', usedIn) + ")");
                 }
 
                 var licenses = entriesOfCorrectVersion.Select(i => i.LicenseUrl).Distinct();
 
                 if (licenses.Count() > 1)
                 {
-                    throw new Exception("Unable to handle package: Found multiple licenses for '" + projectName + "' with version '" + version + "'. (Used in: " + usedIn + ")");
+                    throw new Exception("Unable to handle package: Found multiple licenses for '" + projectName + "' with version '" + version
+                    + "'. (Used in: " + string.Join(',', usedIn) + ")");
                 }
 
                 return licenses.Single();

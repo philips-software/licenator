@@ -2,20 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using Newtonsoft.Json;
 
 namespace Licenator
 {
     public class Program
     {
-        private const string LicenatorHeaderLine = "Licenator v0.0.1 (c) Philips 2018 by Ben Bierens";
-        private const string IndentWhitespaces = "    ";
+        public const string LicenatorHeaderLine = "Licenator v0.0.1 (c) Philips 2018 by Ben Bierens";
         private static string RootPath;
         private static string OutputFile;
         private static List<string> PackagesToIgnore = new List<string>();
         private static NuGetParser Parser = new NuGetParser();
+        private static OutputGenerator Generator = new OutputGenerator();
 
         public static void Main(string[] args)
         {
@@ -25,7 +22,7 @@ namespace Licenator
 
             var packages = new PackageList();
 
-            ProcessPackages(packages);
+            FindAllPackages(packages);
 
             GenerateOutputFile(packages);
 
@@ -42,28 +39,44 @@ namespace Licenator
 
             RootPath = args[0];
             OutputFile = args[1];
-            if (args.Length > 2 && args[2] == "-i")
+            Generator.OmitUsedIn = args.ToList().Any(a => a == "-o");
+            if (args.Length > 2 && args.Any(a => a == "-i"))
             {
-                PackagesToIgnore = args.Skip(3).ToList();
+                var index = args.ToList().IndexOf("-i");
+                PackagesToIgnore = args.Skip(index + 1).ToList();
             }
-            
+
             Console.WriteLine("Directory: " + RootPath);
             Console.WriteLine("Output: " + OutputFile);
             if (PackagesToIgnore.Any())
             {
                 Console.WriteLine("Ignoring packages: " + string.Join(',', PackagesToIgnore));
             }
+
+            if (PackagesToIgnore.Any(p => p.Contains("-")) || 
+                string.IsNullOrEmpty(RootPath) ||
+                string.IsNullOrEmpty(OutputFile))
+            {
+                throw new Exception("Invalid arguments");
+            }
+
+            if (!Directory.Exists(RootPath))
+            {
+                throw new Exception("Provided directory doesn't exist.");
+            }
         }
 
         private static void PrintUsageAndExit()
         {
             Console.WriteLine("Usage: Licenator \"<Root Directory>\" \"<Output filename>\"");
-            Console.WriteLine("You can ignore any number of specific packages with -i:");
-            Console.WriteLine("Usage: Licenator \"<Root Directory>\" \"<Output filename>\" -i \"Package.To.Ignore.One\" \"Package.To.Ignore.Two\"");
+            Console.WriteLine("Options:");
+            Console.WriteLine("    -o : Omits the \"Used In\" information from the output.");
+            Console.WriteLine("    -i : Specify a list of packages to be ignored.");
+            Console.WriteLine("Usage: Licenator \"<Root Directory>\" \"<Output filename>\" -o -i \"Package.To.Ignore.One\" \"Package.To.Ignore.Two\"");
             Environment.Exit(0);
         }
 
-        private static void ProcessPackages(PackageList packages)
+        private static void FindAllPackages(PackageList packages)
         {
             var traveler = new DirectoryTraveler();
             Console.WriteLine("Reading packages...");
@@ -90,41 +103,7 @@ namespace Licenator
 
         private static void GenerateOutputFile(PackageList packages)
         {
-            var lines = new List<string>();
-            lines.Add(LicenatorHeaderLine);
-            lines.Add("Directory: " + RootPath);
-            lines.Add("Generated on: " + DateTime.Now.ToString("s"));
-            lines.Add("");
-            
-            var summary = packages.GetSummary();
-            foreach(var p in summary)
-            {
-                lines.Add("License: " + p.LicenseUrl);
-                lines.Add("Packages with this license:");
-                foreach (var ps in p.Packages)
-                {
-                    lines.Add(IndentWhitespaces + ps.Name + " (" + ps.Version + ")");
-                }
-                lines.Add("Used in:");
-                foreach(var u in p.UsedIn)
-                {
-                    lines.Add(IndentWhitespaces + u);
-                }
-                lines.Add("");
-            }
-
-            var failedPackages = packages.GetFailedPackages();
-            if (failedPackages.Any())
-            {
-                lines.Add("[!] Fetching package metadata failed for the following packages. [!]");
-                foreach (var p in failedPackages)
-                {
-                    lines.Add(IndentWhitespaces + p.Name +  " (" + p.Version + ") Used in: " + p.UsedIn);
-                }
-                lines.Add("");
-            }
-
-            File.WriteAllLines(OutputFile, lines);
+            Generator.Generate(packages, RootPath, OutputFile);
         }
     }
 }

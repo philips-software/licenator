@@ -6,7 +6,7 @@ namespace Licenator
     {
         public string Name { get; set; }
         public string Version { get; set; }
-        public string UsedIn { get; set; }
+        public List<string> UsedIn { get; set; }
 
         public string LicenseUrl { get; set; }
     }

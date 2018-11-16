@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Licenator
@@ -34,7 +35,7 @@ namespace Licenator
             {
                 Name = idTag.Value,
                 Version = versionTag.Value,
-                UsedIn = filepath
+                UsedIn = new List<string>{filepath}
             };
         }
     }
