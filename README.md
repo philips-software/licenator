@@ -1,3 +1,5 @@
+[![Slack](https://philips-software-slackin.now.sh/badge.svg)](https://philips-software-slackin.now.sh)
+
 # Licenator
 
 Automatically gathers all the license URLs for all your NuGet packages.
@@ -29,8 +31,8 @@ Usage:
 
 ## Maintainers
 
-Ben Bierens
-Gertjan Maas
+- Ben Bierens
+- Gertjan Maas
 
 ## Issues
 
@@ -38,4 +40,4 @@ Gertjan Maas
 
 ## License
 
-[MIT license](LICENSE.md)
+License is MIT. See [LICENSE file](LICENSE.md)
