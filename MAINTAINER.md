@@ -1,2 +1,2 @@
 Ben Bierens <ben.bierens@philips.com>
-Gertjan MAas <gertjan.maas@philips.com>
+Gertjan Maas <gertjan.maas@philips.com>
