@@ -1,6 +1,6 @@
-[![Slack](https://philips-software-slackin.now.sh/badge.svg)](https://philips-software-slackin.now.sh)
-
 # Licenator
+
+⚠️ This project is archived
 
 Automatically gathers all the license URLs for all your NuGet packages.
 
